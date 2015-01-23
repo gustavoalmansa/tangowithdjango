@@ -9,3 +9,4 @@ book/_build/
 .DS_Store
 keys.py
 *.sqlite3
+*.pyc

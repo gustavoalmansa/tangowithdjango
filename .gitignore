@@ -1,5 +1,4 @@
 .idea/
-*.pyc
 *.DS_Store
 _build/
 book/_build/

@@ -1,4 +1,6 @@
 import os
+from random import randint
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tango_with_django_project.settings')
 
 import django
@@ -54,7 +56,7 @@ def populate():
 
     add_page(cat=my_name_cat,
              title="Pythonanywhere.com",
-             url="http://gustavoalmansa.pythonanywhere.com/")
+             url="http://gustavoalmansa.pythonanywhere.com/rango/")
 
     # Print out what we have added to the user.
     for c in Category.objects.all():
@@ -62,7 +64,8 @@ def populate():
             print "- {0} - {1}".format(str(c), str(p))
 
 
-def add_page(cat, title, url, views=0):
+def add_page(cat, title, url):
+    views = randint(0, 100)
     p = Page.objects.get_or_create(category=cat, title=title, url=url, views=views)[0]
     return p
 

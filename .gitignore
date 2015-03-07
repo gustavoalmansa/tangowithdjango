@@ -6,6 +6,5 @@ book/_build/
 *.tmpproj
 *.db
 .DS_Store
-keys.py
 *.sqlite3
 *.pyc

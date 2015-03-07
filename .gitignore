@@ -2,6 +2,7 @@
 *.DS_Store
 _build/
 book/_build/
+keys.py
 *.log
 *.tmpproj
 *.db

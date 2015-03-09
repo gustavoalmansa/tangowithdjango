@@ -3,6 +3,7 @@
 _build/
 book/_build/
 keys.py
+media/profile_images/
 *.log
 *.tmpproj
 *.db

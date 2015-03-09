@@ -1,5 +1,6 @@
-from django.shortcuts import render
-from models import Category, Page
+import user
+from django.shortcuts import render, redirect
+from models import Category, Page, UserProfile
 from rango.forms import CategoryForm, PageForm
 from rango.forms import UserForm, UserProfileForm
 from rango.bing_search import run_query
@@ -61,6 +62,15 @@ def about(request):
 def category(request, category_name_slug):
     # Create a context dictionary which we can pass to the template rendering engine.
     context_dict = {}
+    context_dict['query'] = None
+    context_dict['result_list'] = None
+
+    if request.method == 'POST':
+        query = request.POST['query'].strip()
+        if query:
+            # Run our Bing function to get the results list!
+            context_dict['result_list'] = run_query(query)
+            context_dict['query'] = query
 
     try:
         # Can we find a category name slug with the given name?
@@ -78,6 +88,10 @@ def category(request, category_name_slug):
         # We also add the category object from the database to the context dictionary.
         # We'll use this in the template to verify that the category exists.
         context_dict['category'] = category
+
+        if not context_dict['query']:
+            context_dict['query'] = category.name
+
     except Category.DoesNotExist:
         # We get here if we didn't find the specified category.
         # Don't do anything - the template displays the "no category"    message for us.
@@ -265,3 +279,108 @@ def search(request):
             result_list = run_query(query)
 
     return render(request, 'rango/search.html', {'result_list': result_list})
+
+
+def track_url(request):
+
+    url = '/rango/'
+
+    if request.method == 'GET':
+        if 'page_id' in request.GET:
+            page_id = request.GET['page_id']
+            try:
+                page = Page.objects.get(id=page_id)
+                url = page.url
+                page.views = page.views + 1
+                page.save()
+            except:
+                pass
+
+    return redirect(url)
+
+
+def register_profile(request):
+
+    # A HTTP POST?
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST)
+
+        # Have we been provided with a valid form?
+        if form.is_valid():
+            # Now sort out the UserProfile instance.
+            # Since we need to set the user attribute ourselves, we set commit=False.
+            # This delays saving the model until we're ready to avoid integrity problems.
+            profile = form.save(commit=False)
+            profile.user = request.user
+
+            # Did the user provide a profile picture?
+            # If so, we need to get it from the input form and put it in the UserProfile model.
+            if 'picture' in request.FILES:
+                profile.picture = request.FILES['picture']
+
+            # Now we save the UserProfile model instance.
+            profile.save()
+            # Now call the index() view.
+            # The user will be shown the homepage.
+            return index(request)
+        else:
+            # The supplied form contained errors - just print them to the terminal.
+            print form.errors
+    else:
+        form = UserProfileForm()
+        return render(request, 'registration/profile_registration.html', {'form': form})
+
+
+@login_required
+def profile(request):
+
+    form = {}
+
+    # A HTTP POST?
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST)
+
+        # Have we been provided with a valid form?
+        if form.is_valid():
+            # Now sort out the UserProfile instance.
+            # Since we need to set the user attribute ourselves, we set commit=False.
+            # This delays saving the model until we're ready to avoid integrity problems.
+            profile = form.save(commit=False)
+            profile.user = request.user
+
+            # Did the user provide a profile picture?
+            # If so, we need to get it from the input form and put it in the UserProfile model.
+            if 'picture' in request.FILES:
+                profile.picture = request.FILES['picture']
+
+            # Now we save the UserProfile model instance.
+            profile.save()
+            # Now call the index() view.
+            # The user will be shown the homepage.
+            return index(request)
+        else:
+            # The supplied form contained errors - just print them to the terminal.
+            print form.errors
+    else:
+        form['user_profile'] = UserProfileForm()
+        form['user'] = UserForm()
+        return render(request, 'registration/profile.html', {'form': form})
+
+
+@login_required
+def show_user(request, user_id):
+    context_dict = {}
+
+    try:
+        user = UserProfile.objects.get(user_id=user_id)
+        context_dict = user
+    except:
+        pass
+
+    return render(request, 'rango/show_user.html', {'dict': context_dict})
+
+
+@login_required
+def list_users(request):
+    users = UserProfile.objects.all()
+    return render(request, 'rango/list_users.html', {'users': users})

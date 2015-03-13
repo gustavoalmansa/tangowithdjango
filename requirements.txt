@@ -1,5 +1,5 @@
 Django==1.7.3
-PIL==1.1.7
+PILLOW==2.7.0
 wsgiref==0.1.2
 django-registration-redux==1.1
 django-bootstrap-toolkit==2.15.0
